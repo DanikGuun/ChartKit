@@ -9,13 +9,10 @@ open class PieChart: UIView, Chart {
     public var innerCornerRadius: CGFloat = 0 { didSet { updateLayers() } }
     public var inset: CGFloat = 0 { didSet { updateLayers() } }
     
-    
     private var currentStartAngle: CGFloat = 0
     private var radius: CGFloat {
-        return (min(self.frame.width, self.frame.height) - spaceBetweenSlices) / 2
+        return (min(self.frame.width, self.frame.height)) / 2
     }
-
-    
     
     //
     //MARK: - Lifecycle
@@ -41,13 +38,6 @@ open class PieChart: UIView, Chart {
         for element in elements {
             createElementLayer(for: element)
         }
-        
-        let maskLayer = CAShapeLayer()
-        let center = CGPoint(x: self.bounds.midX, y: self.bounds.midY)
-        let radius = min(self.frame.width, self.frame.height) / 2
-        maskLayer.path = UIBezierPath(arcCenter: center, radius: radius, startAngle: 0, endAngle: .pi*2, clockwise: true).cgPath
-        
-        //self.layer.mask = maskLayer
     }
     
     private func createElementLayer(for element: ChartElement){
@@ -60,38 +50,57 @@ open class PieChart: UIView, Chart {
     }
     
     private func createPath(value: CGFloat) -> UIBezierPath{
-        let midAngle = (currentStartAngle + getEndAngle(for: value)) / 2
         
         let builder = SlicePathBuilder()
         builder.startAngle = currentStartAngle
         builder.endAngle = getEndAngle(for: value)
-        builder.center = getCenterOfSlice(midAngle: midAngle)
-        builder.innerCornerRadius = innerCornerRadius
-        builder.outerCornerRadius = outerCornerRadius
+        builder.center = getCenterOfSlice()
+        builder.innerCornerRadius = getInnerRadius()
+        builder.outerCornerRadius = getOuterRadius()
         builder.inset = inset
         builder.radius = radius
         return builder.createPath()
     }
     
-    private func getCenterOfSlice(midAngle: CGFloat) -> CGPoint {
-        let centerX = self.bounds.midX + cos(midAngle.toRadian()) * (spaceBetweenSlices / 2)
-        let centerY = self.bounds.midY + sin(midAngle.toRadian()) * (spaceBetweenSlices / 2)
+    private func getCenterOfSlice() -> CGPoint {
+        let centerX = self.bounds.midX
+        let centerY = self.bounds.midY
         return CGPoint(x: centerX, y: centerY)
+    }
+    
+    private func getSpaceBetweenSlices() -> CGFloat {
+        return spaceBetweenSlices.clamped(to: 0.0 ... CGFloat(360/elements.count))
     }
 
     private func getEndAngle(for value: CGFloat) -> CGFloat {
-        let angleOffset: CGFloat = 360 * value / valuesSum()
+        let angleOffset: CGFloat = getAvailableAngle() * value / valuesSum()
         return currentStartAngle + angleOffset
     }
     
     private func setCurrnetAngle(for value: CGFloat){
-        let angleOffset: CGFloat = 360 * value / valuesSum()
-        currentStartAngle += angleOffset
+        let endAngle = getEndAngle(for: value)
+        currentStartAngle = endAngle + getSpaceBetweenSlices()
+    }
+    
+    private func getAvailableAngle() -> CGFloat {
+        if elements.count > 1 {
+            return 360 - getSpaceBetweenSlices() * CGFloat(elements.count)
+        }
+        return 360
+    }
+    
+    private func getInnerRadius() -> CGFloat {
+        return elements.count > 1 ? innerCornerRadius : 0
+    }
+    
+    private func getOuterRadius() -> CGFloat {
+        return elements.count > 1 ? outerCornerRadius : 0
     }
     
     private func valuesSum() -> CGFloat {
         return elements.reduce(0, { $0 + $1.value } ) 
     }
+    
     
     
 }
