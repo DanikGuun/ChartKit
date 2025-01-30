@@ -15,6 +15,5 @@ extension CGFloat {
     func clamped(to range: ClosedRange<CGFloat>) -> CGFloat {
         return CGFloat.minimum(CGFloat.maximum(self, range.lowerBound), range.upperBound)
     }
-
     
 }
