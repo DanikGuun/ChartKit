@@ -1,8 +1,26 @@
 
 import UIKit
 
-protocol Chart {
+@MainActor
+public protocol Chart {
+    var delegate: ChartDelegate? { get set }
     
+    func addElement(_ element: ChartElement)
+    func getElement(with id: UUID) -> ChartElement?
+    func getAllElements() -> [ChartElement]
+    func replaceElement(with id: UUID, newElement: ChartElement)
+    func removeElement(with id: UUID)
+    func removeAllElements()
+    func reloadData()
+}
+
+@MainActor
+public protocol ChartDelegate {
+    func chartDidPressed(_ chart: Chart)
+}
+
+public extension ChartDelegate {
+    func chartDidPressed(_ chart: Chart){}
 }
 
 public struct ChartElement: Identifiable {

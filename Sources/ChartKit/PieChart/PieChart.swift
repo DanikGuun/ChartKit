@@ -1,13 +1,14 @@
 
 import UIKit
 
-open class PieChart: UIView, Chart {
+open class PieChart: UIControl, Chart {
     
     public var elements: [ChartElement] = [] { didSet { updateLayers() } }
     public var spaceBetweenSlices: CGFloat = 0 { didSet { updateLayers() } }
     public var outerCornerRadius: CGFloat = 0 { didSet { updateLayers() } }
     public var innerCornerRadius: CGFloat = 0 { didSet { updateLayers() } }
     public var inset: CGFloat = 0 { didSet { updateLayers() } }
+    public var delegate: ChartDelegate?
     
     private var currentStartAngle: CGFloat = 0
     
@@ -19,17 +20,31 @@ open class PieChart: UIView, Chart {
     }
     public override init(frame: CGRect) {
         super.init(frame: frame)
+        self.isUserInteractionEnabled = true
         updateLayers()
+        delegate = nil
+        setupDelegateMethods()
     }
     
     public required init?(coder: NSCoder) {
         super.init(coder: coder)
     }
+    
+    private func setupDelegateMethods() {
+        setupTapAction()
+    }
+    
+    private func setupTapAction() {
+        self.addAction(UIAction(handler: { [weak self] _ in
+            guard let self = self else { return }
+            self.delegate?.chartDidPressed(self)
+        }), for: .touchUpInside)
+    }
 
     //
     //MARK: - Layers
     //
-    private func updateLayers(){
+    public func updateLayers() {
         self.layer.sublayers?.removeAll()
         currentStartAngle = 0
         for element in elements {
@@ -38,7 +53,7 @@ open class PieChart: UIView, Chart {
         }
     }
     
-    private func createElementLayer(for element: ChartElement){
+    private func createElementLayer(for element: ChartElement) {
         let path = createPath(value: element.value)
         let layer = CAShapeLayer()
         layer.path = path.cgPath
@@ -46,7 +61,7 @@ open class PieChart: UIView, Chart {
         self.layer.addSublayer(layer)
     }
     
-    private func createPath(value: CGFloat) -> UIBezierPath{
+    private func createPath(value: CGFloat) -> UIBezierPath {
         let builder = SlicePathBuilder()
         builder.center = getCenter()
         builder.startAngle = currentStartAngle
@@ -105,6 +120,37 @@ open class PieChart: UIView, Chart {
     
     private func valuesSum() -> CGFloat {
         return elements.reduce(0, { $0 + $1.value } ) 
+    }
+    
+    //MARK: - Chart Protocol
+    public func addElement(_ element: ChartElement) {
+        elements.append(element)
+    }
+    
+    public func getElement(with id: UUID) -> ChartElement? {
+        return elements.first(where: { $0.id == id })
+    }
+    
+    public func getAllElements() -> [ChartElement] {
+        return elements
+    }
+    
+    public func replaceElement(with id: UUID, newElement: ChartElement) {
+        guard let index = elements.firstIndex(where: { $0.id == id }) else { return }
+        elements[index] = newElement
+    }
+    
+    public func removeElement(with id: UUID) {
+        guard let index = elements.firstIndex(where: { $0.id == id }) else { return }
+        elements.remove(at: index)
+    }
+    
+    public func removeAllElements() {
+        elements.removeAll()
+    }
+    
+    public func reloadData() {
+        self.updateLayers()
     }
     
 }
