@@ -2,9 +2,10 @@
 import UIKit
 
 @MainActor
-public protocol Chart {
+public protocol Chart: UIView {
     var delegate: ChartDelegate? { get set }
     
+    func setElements(_ elements: [ChartElement])
     func addElement(_ element: ChartElement)
     func getElement(with id: UUID) -> ChartElement?
     func getAllElements() -> [ChartElement]

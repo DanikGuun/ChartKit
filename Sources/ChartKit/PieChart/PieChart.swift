@@ -7,8 +7,12 @@ open class PieChart: UIControl, Chart {
     public var spaceBetweenSlices: CGFloat = 0 { didSet { updateLayers() } }
     public var outerCornerRadius: CGFloat = 0 { didSet { updateLayers() } }
     public var innerCornerRadius: CGFloat = 0 { didSet { updateLayers() } }
-    public var inset: CGFloat = 0 { didSet { updateLayers() } }
+    public var inset: InsetType = .value(0) { didSet { updateLayers() } }
     public var delegate: ChartDelegate?
+    
+    public var radius: CGFloat {
+       return (min(self.frame.width, self.frame.height)) / 2
+    }
     
     private var currentStartAngle: CGFloat = 0
     
@@ -30,9 +34,15 @@ open class PieChart: UIControl, Chart {
         super.init(coder: coder)
     }
     
+    open override func layoutSubviews() {
+        super.layoutSubviews()
+        updateLayers()
+    }
+    
     private func setupDelegateMethods() {
         setupTapAction()
     }
+    
     
     private func setupTapAction() {
         self.addAction(UIAction(handler: { [weak self] _ in
@@ -68,8 +78,8 @@ open class PieChart: UIControl, Chart {
         builder.endAngle = getEndAngle(for: value)
         builder.innerCornerRadius = getInnerRadius()
         builder.outerCornerRadius = getOuterRadius()
-        builder.inset = inset
-        builder.radius = getRadius()
+        builder.inset = getInset()
+        builder.radius = radius
         return builder.createPath()
     }
     
@@ -96,13 +106,20 @@ open class PieChart: UIControl, Chart {
         return elements.count > 1 ? outerCornerRadius : 0
     }
     
+    private func getInset() -> CGFloat {
+        switch inset {
+        case .fraction(let percent):
+            return radius * percent
+        case .value(let value):
+            return value
+        case .fromRadius(let value):
+            return radius - value
+        }
+    }
+    
     private func setCurrnetAngle(after value: CGFloat){
         let endAngle = getEndAngle(for: value)
         currentStartAngle = endAngle + getSpaceBetweenSlices()
-    }
-    
-    private func getRadius() -> CGFloat {
-        return (min(self.frame.width, self.frame.height)) / 2
     }
     
     //MARK: Helpers
@@ -123,6 +140,10 @@ open class PieChart: UIControl, Chart {
     }
     
     //MARK: - Chart Protocol
+    public func setElements(_ elements: [ChartElement]) {
+        self.elements = elements
+    }
+    
     public func addElement(_ element: ChartElement) {
         elements.append(element)
     }
@@ -153,4 +174,10 @@ open class PieChart: UIControl, Chart {
         self.updateLayers()
     }
     
+}
+
+public enum InsetType {
+    case fraction(_ percent: CGFloat)
+    case value(_ value: CGFloat)
+    case fromRadius( value: CGFloat)
 }

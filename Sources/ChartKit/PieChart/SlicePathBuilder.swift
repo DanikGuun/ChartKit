@@ -193,6 +193,7 @@ class SlicePathBuilder {
     }
     
     private func point(angle: CGFloat, radius: CGFloat) -> CGPoint {
+        let angle = angle.isNaN ? 0 : angle
         let x = center.x + radius * cos(angle.toRadian())
         let y = center.y + radius * sin(angle.toRadian())
         return CGPoint(x: x, y: y)
