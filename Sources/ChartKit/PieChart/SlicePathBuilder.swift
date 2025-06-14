@@ -126,7 +126,7 @@ class SlicePathBuilder {
         var possibleValues = [outerCornerRadius]
         possibleValues.append(getOuterCornerRadiusConsiderArcLength())
         possibleValues.append(getOuterCornerRadiusConsiderSliceHeight())
-        return possibleValues.min()!.rounded(.down)
+        return max(abs(possibleValues.min()!.rounded(.down)), 0.1)
     }
     
     private func getOuterCornerRadiusConsiderArcLength() -> CGFloat {
@@ -149,7 +149,7 @@ class SlicePathBuilder {
         var possibleValues = [innerCornerRadius]
         possibleValues.append(getInnerCornerRadiusConsiderArcLength())
         possibleValues.append(getInnerCornerRadiusConsiderSliceHeight())
-        return possibleValues.min()!.rounded(.down)
+        return max(abs(possibleValues.min()!.rounded(.down)), 0.1)
     }
     
     private func getInnerCornerRadiusConsiderArcLength() -> CGFloat {
@@ -186,10 +186,10 @@ class SlicePathBuilder {
     }
     
     private func getOuterLengthPerDegree() -> CGFloat {
-        return 2 * radius * .pi / 360
+        return max(2 * radius * .pi / 360, 0.001) //max чтобы избежать нулевых значений угла, чтобы не делить на 0
     }
     private func getInnerLengthPerDegree() -> CGFloat {
-        return 2 * inset * .pi / 360
+        return max(2 * inset * .pi / 360, 0.001) //max чтобы избежать нулевых значений угла, чтобы не делить на 0
     }
     
     private func point(angle: CGFloat, radius: CGFloat) -> CGPoint {

@@ -7,7 +7,7 @@ open class PieChart: UIControl, Chart {
     public var spaceBetweenSlices: CGFloat = 0 { didSet { updateLayers() } }
     public var outerCornerRadius: CGFloat = 0 { didSet { updateLayers() } }
     public var innerCornerRadius: CGFloat = 0 { didSet { updateLayers() } }
-    public var inset: InsetType = .value(0) { didSet { updateLayers() } }
+    public var inset: InsetType = .fromInner(0) { didSet { updateLayers() } }
     public var delegate: ChartDelegate?
     
     public var radius: CGFloat {
@@ -54,7 +54,7 @@ open class PieChart: UIControl, Chart {
     //
     //MARK: - Layers
     //
-    public func updateLayers() {
+    private func updateLayers() {
         self.layer.sublayers?.removeAll()
         currentStartAngle = 0
         for element in elements {
@@ -110,9 +110,9 @@ open class PieChart: UIControl, Chart {
         switch inset {
         case .fraction(let percent):
             return radius * percent
-        case .value(let value):
+        case .fromInner(let value):
             return value
-        case .fromRadius(let value):
+        case .fromOuter(let value):
             return radius - value
         }
     }
@@ -142,6 +142,10 @@ open class PieChart: UIControl, Chart {
     //MARK: - Chart Protocol
     public func setElements(_ elements: [ChartElement]) {
         self.elements = elements
+    }
+    
+    public func addElements(_ elements: [ChartElement]) {
+        elements.forEach { addElement($0) }
     }
     
     public func addElement(_ element: ChartElement) {
@@ -178,6 +182,6 @@ open class PieChart: UIControl, Chart {
 
 public enum InsetType {
     case fraction(_ percent: CGFloat)
-    case value(_ value: CGFloat)
-    case fromRadius( value: CGFloat)
+    case fromInner(_ value: CGFloat)
+    case fromOuter( value: CGFloat)
 }
